@@ -1,0 +1,25 @@
+{
+  "name": "sync-pr-to-redmine",
+  "version": "1.0.0",
+  "description": "pull_requestとRedmine issueを連携するGitHub Actionです。",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mana544/sync-pr-to-redmine.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mana544/sync-pr-to-redmine/issues"
+  },
+  "homepage": "https://github.com/mana544/sync-pr-to-redmine#readme",
+  "dependencies": {
+    "@actions/core": "^1.6.0",
+    "@actions/github": "^5.0.0",
+    "axios": "^0.25.0"
+  }
+}
