@@ -11608,6 +11608,14 @@ function main() {
         const stsid_mgclosed = core.getInput('sts-id-if-mergeclosed-pr');
         // プルリクイベント'closed'(unmerged)時のstatus_id
         const stsid_unmgclosed = core.getInput('sts-id-if-unmergeclosed-pr');
+        // プルリクイベント'opened'時のコメント
+        const cmt_opened = core.getInput('comment-if-opened-pr');
+        // プルリクイベント'reopened'時のコメント
+        const cmt_reopened = core.getInput('comment-if-reopened-pr');
+        // プルリクイベント'closed'(merge)時のコメント
+        const cmt_mgclosed = core.getInput('comment-if-mergeclosed-pr');
+        // プルリクイベント'closed'(unmerged)時のコメント
+        const cmt_unmgclosed = core.getInput('comment-if-unmergeclosed-pr');
 
         // ブランチ名からチケット番号抽出
         const issue_num = pick_issue_num(in_head_ref, regex_pattern);
@@ -11632,7 +11640,7 @@ function main() {
                 // * チケットにコメントする
                 // * 置換した説明欄をアップデート
                 console.log("Redmineチケット #" + issue_num + "を更新...")
-                let comment = "このチケットに関連するプルリクエストが発行されました。\n\n" + pr_url;
+                let comment = cmt_opened + "\n\n" + pr_url;
                 updateRmIssue(rm_url, rm_key, issue_num,
                     comment, 
                     stsid_opened, 
@@ -11705,7 +11713,7 @@ function main() {
             // * ステータスを stsid_reopened にする
             // * チケットにコメントする
             console.log("Redmineチケット #" + issue_num + "を更新...")
-            let comment = "このチケットに関連するプルリクエストが再度オープンになりました。\n\n" + pr_url;
+            let comment = cmt_reopened + "\n\n" + pr_url;
             updateRmIssue(rm_url, rm_key, issue_num,
                 comment, 
                 stsid_reopened)
@@ -11733,14 +11741,14 @@ function main() {
             ////////////////
             // マージ true
             ////////////////
-            if (ismerged === 'true') {
+            if (ismerged) {
                 console.log("Pull_request '" + pr_action + "'(merged) event...")
 
                 // Redmine チケット更新
                 // * ステータスを stsid_mgclosed にする
                 // * チケットにコメントする
                 console.log("Redmineチケット #" + issue_num + "を更新...")
-                let comment = "このチケットに関連するプルリクエストがマージ&クローズされました。\n\n" + pr_url;
+                let comment = cmt_mgclosed + "\n\n" + pr_url;
                 updateRmIssue(rm_url, rm_key, issue_num,
                     comment, 
                     stsid_mgclosed)
@@ -11770,7 +11778,7 @@ function main() {
                 // * ステータスを stsid_unmgclosed にする
                 // * チケットにコメントする
                 console.log("Redmineチケット #" + issue_num + "を更新...")
-                let comment = "このチケットに関連するプルリクエストがマージされずにクローズされました。\n\n" + pr_url;
+                let comment = cmt_unmgclosed + "\n\n" + pr_url;
                 updateRmIssue(rm_url, rm_key, issue_num,
                     comment, 
                     stsid_unmgclosed)

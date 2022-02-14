@@ -30,18 +30,34 @@ inputs:
     description: 'プルリクエストopened のときの、Redmineチケットのstatus_id'
     required: false
     default: 1
+  comment-if-opened-pr:
+    description: 'プルリクエスト opened のときの、Redmineチケットに投稿するコメント文'
+    required: false
+    default: 'このチケットに関連するプルリクエストが発行されました。'
   sts-id-if-reopened-pr:
     description: 'プルリクエストreopened のときの、Redmineチケットのstatus_id'
     required: false
     default: 2
+  comment-if-reopened-pr:
+    description: 'プルリクエスト reopened のときの、Redmineチケットに投稿するコメント文'
+    required: false
+    default: 'このチケットに関連するプルリクエストが再度オープンになりました。'
   sts-id-if-mergeclosed-pr:
     description: 'プルリクエストclosed(merge) のときの、Redmineチケットのstatus_id'
     required: false
     default: 3
+  comment-if-mergeclosed-pr:
+    description: 'プルリクエスト closed(merge) のときの、Redmineチケットに投稿するコメント文'
+    required: false
+    default: 'このチケットに関連するプルリクエストがマージ&クローズされました。'
   sts-id-if-unmergeclosed-pr:
     description: 'プルリクエストclosed(unmerged) のときの、Redmineチケットのstatus_id'
     required: false
     default: 4
+  comment-if-unmergeclosed-pr:
+    description: 'プルリクエスト closed(unmerged) のときの、Redmineチケットに投稿するコメント文'
+    required: false
+    default: 'このチケットに関連するプルリクエストがマージされずにクローズされました。'
   
 runs:
   using: 'node16'
