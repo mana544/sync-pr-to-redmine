@@ -11552,11 +11552,13 @@ function main() {
         const context = github.context;
 
         if (context.eventName !== "pull_request") {
-            throw Error(
+            let e = Error(
                 "This action was called from an unexpected event. " +
                 'This action expects to be called from a "pull_request" event, ' +
                 'but it is actually a "'+ context.eventName +'" event. '
-            )
+            );
+            e.name = 'EventTriggerError';
+            throw e
         }
     
         // get token
@@ -11804,14 +11806,47 @@ function main() {
         ////////////////////////////
         } else {
             // エラーをスロー
-            throw Error(
-                "プルリクイベント '" + pr_action + "' でトリガーされました。何もしません。"
-            )
+            let e = Error(
+                "プルリクイベント '" + pr_action + "' は、このアクションでは対象外です。"
+            );
+            e.name = 'PRActTriggerError';
+            throw e
         }
             
     } catch (e) {
-        console.error(e)
-        core.setFailed(e.message);
+
+        console.log("Debug: エラーをキャッチしました。");
+        // #4 check-behavior オプションの新設
+        // チェック挙動
+        const chk_beh = core.getInput('check-behavior');
+
+        // 挙動を変える対象かどうかを判定(以下のエラーだったら対象)
+        // * 'PickIssueNumError'
+        // * 'EventTriggerError'
+        // * 'PRActTriggerError'
+        if (['PickIssueNumError', 'EventTriggerError', 'PRActTriggerError'].includes(e.name)) {
+            console.log("Debug: 特定のエラーです。");
+
+            //////////////////////////////////////
+            // check-behavior オプション 'warning'
+            //////////////////////////////////////
+            if (chk_beh === 'warning') {
+                console.log(e);
+                core.warning(e.toString());
+
+            //////////////////////////////////////
+            // check-behavior オプション 'error'(Default)
+            //////////////////////////////////////
+            } else {
+                console.error(e);
+                core.setFailed(e.message);
+            }
+
+        // 挙動変更対象外のエラーは、エラー送出
+        } else {
+            console.error(e);
+            core.setFailed(e.message);
+        }
     }
 }
 
@@ -11844,17 +11879,14 @@ async function replaceRmDescription(rm_url, issue_num, substr, newsubstr) {
     console.log("GET/ " + url.href)
 
     let res;
-    try {
-        // 404エラーの場合はエラー送出
-        res = await axios.get(url.href);
+    // 404エラーの場合はエラー送出
+    res = await axios.get(url.href);
 
-    } catch (e) {
-        throw e;
-    }
     // 説明欄の中身を置換して返す
     const org_str = res.data.issue.description;
     const new_str = org_str.replaceAll(substr, newsubstr);
     return new_str;
+
 }
 
 async function updateRmIssue(rm_url, rm_key, issue_num, comment, status, description){
@@ -11890,16 +11922,9 @@ async function updateRmIssue(rm_url, rm_key, issue_num, comment, status, descrip
         timeout: 10000
     };
 
-    try {
-        // 404エラーの場合はエラー送出
-        const res = await axios.put(url.href, data, config);
-
-        return res;
-        
-        
-    } catch (e) {
-        throw e;
-    }
+    // 404エラーの場合はエラー送出
+    const res = await axios.put(url.href, data, config);
+    return res;
 
 }
 
@@ -11928,8 +11953,12 @@ function pick_issue_num(ref_name, pattern) {
 
     // null(マッチしなかった)
     if (!a) {
-        core.setFailed("ブランチ名 '" + ref_name + "' からチケット番号を抽出できませんでした。パターンマッチしませんでした");
-        // core.setFailed -> throw Error
+        let e = Error(
+            "ブランチ名 '" + ref_name + 
+            "' からチケット番号を抽出できませんでした。パターンマッチしませんでした"
+        );
+        e.name = 'PickIssueNumError';
+        throw e
 
     // なんかしらマッチした
     } else {
@@ -11940,17 +11969,32 @@ function pick_issue_num(ref_name, pattern) {
             
             // マッチした文字列を数値にできない
             if (Number.isNaN(n)) {
-                core.setFailed("ブランチ名 '" + ref_name + "' からチケット番号を抽出できませんでした。マッチした文字列 '"+ a[0] +"' が数値変換できませんでした");
-            
+                let e = Error(
+                    "ブランチ名 '" + ref_name + 
+                    "' からチケット番号を抽出できませんでした。" +
+                    "マッチした文字列 '"+ a[0] + 
+                    "' が数値変換できませんでした"
+                );
+                e.name = 'PickIssueNumError';
+                throw e
+                    
             } else {
                 return n;
             }
 
         // マッチした個数が複数
         } else {
-            core.setFailed("ブランチ名 '" + ref_name + "' からチケット番号を抽出できませんでした。マッチした文字列が複数存在します");
+            let e = Error(
+                "ブランチ名 '" + ref_name + 
+                "' からチケット番号を抽出できませんでした。" + 
+                "マッチした文字列が複数存在します"
+            );
+            e.name = 'PickIssueNumError';
+            throw e
+
         }
     }
+
 }
 
 
