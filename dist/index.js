@@ -11618,6 +11618,14 @@ function main() {
         const cmt_mgclosed = core.getInput('comment-if-mergeclosed-pr');
         // プルリクイベント'closed'(unmerged)時のコメント
         const cmt_unmgclosed = core.getInput('comment-if-unmergeclosed-pr');
+        // opened のときの実開始日更新: true/false(default)
+        const act_st_opened = true;
+        // reopened のときの実開始日更新: true/false(default)
+        const act_st_reopened = true;
+        // closed(merge) のときの実終了日更新: true/false(default)
+        const act_ed_mgclosed = true;
+        // closed(unmerge) のときの実終了日更新: true/false(default)
+        const act_ed_unmgclosed = true;
 
         // ブランチ名からチケット番号抽出
         const issue_num = pick_issue_num(in_head_ref, regex_pattern);
@@ -11637,6 +11645,11 @@ function main() {
             .then((description) => {
                 console.log("Redmineチケットの説明欄を取得しました")
 
+                // opened のときの実開始日更新設定
+                let act_date = 0;
+                if (act_st_opened) {
+                    act_date = 1;
+                }
                 // Redmine チケット更新
                 // * ステータスを stsid_opened にする
                 // * チケットにコメントする
@@ -11645,7 +11658,7 @@ function main() {
                 let comment = cmt_opened + "\n\n" + pr_url;
                 updateRmIssue(rm_url, rm_key, issue_num,
                     comment, 
-                    stsid_opened, 
+                    stsid_opened, act_date, 
                     description)
                 .then((dat) => {
                     console.log("Redmineチケット更新しました")
@@ -11711,6 +11724,11 @@ function main() {
         } else if (pr_action === 'reopened') {
             console.log("Pull_request '" + pr_action + "' event...")
 
+            // reopened のときの実開始日更新
+            let act_date = 0;
+            if (act_st_reopened) {
+                act_date = 1;
+            }
             // Redmine チケット更新
             // * ステータスを stsid_reopened にする
             // * チケットにコメントする
@@ -11718,7 +11736,7 @@ function main() {
             let comment = cmt_reopened + "\n\n" + pr_url;
             updateRmIssue(rm_url, rm_key, issue_num,
                 comment, 
-                stsid_reopened)
+                stsid_reopened, act_date)
             .then((dat) => {
                 console.log("Redmineチケット更新しました")
                 // レスポンス返ってきたあとの処理
@@ -11746,6 +11764,11 @@ function main() {
             if (ismerged) {
                 console.log("Pull_request '" + pr_action + "'(merged) event...")
 
+                // closed(merge) のときの実終了日更新
+                let act_date = 0;
+                if (act_ed_mgclosed) {
+                    act_date = 2;
+                }
                 // Redmine チケット更新
                 // * ステータスを stsid_mgclosed にする
                 // * チケットにコメントする
@@ -11753,7 +11776,7 @@ function main() {
                 let comment = cmt_mgclosed + "\n\n" + pr_url;
                 updateRmIssue(rm_url, rm_key, issue_num,
                     comment, 
-                    stsid_mgclosed)
+                    stsid_mgclosed, act_date)
                 .then((dat) => {
                     console.log("Redmineチケット更新しました")
                     // レスポンス返ってきたあとの処理
@@ -11776,6 +11799,11 @@ function main() {
             } else {
                 console.log("Pull_request '" + pr_action + "'(unmerged) event...")
 
+                // closed(unmerge) のときの実終了日更新
+                let act_date = 0;
+                if (act_ed_unmgclosed) {
+                    act_date = 2;
+                }
                 // Redmine チケット更新
                 // * ステータスを stsid_unmgclosed にする
                 // * チケットにコメントする
@@ -11783,7 +11811,7 @@ function main() {
                 let comment = cmt_unmgclosed + "\n\n" + pr_url;
                 updateRmIssue(rm_url, rm_key, issue_num,
                     comment, 
-                    stsid_unmgclosed)
+                    stsid_unmgclosed, act_date)
                 .then((dat) => {
                     console.log("Redmineチケット更新しました")
                     // レスポンス返ってきたあとの処理
@@ -11889,7 +11917,9 @@ async function replaceRmDescription(rm_url, issue_num, substr, newsubstr) {
 
 }
 
-async function updateRmIssue(rm_url, rm_key, issue_num, comment, status, description){
+async function updateRmIssue(
+    rm_url, rm_key, issue_num,
+    comment, status, act_date, description){
     /*
     * チケットにコメントを残す
     * ステータスの変更(要求があれば)
@@ -11901,16 +11931,50 @@ async function updateRmIssue(rm_url, rm_key, issue_num, comment, status, descrip
 
     desctiption:str = undefined
 
+    act_date = {0,1,2}
+        実開始日/実終了日の更新をするか
+        0: 更新しない
+        1: 実開始日を今日の日付にする
+        2: 実終了日を今日の日付にする
     */
 
     const url = new URL('issues/'+issue_num+'.json', rm_url);
     console.log("PUT/ "+url.href)
 
+    // 実開始日/実終了日の更新設定
+    let act_st_date = undefined;
+    let act_ed_date = undefined;
+    if (act_date === 1) {
+        // 実開始日を今日の日付に設定
+        const date = new Date();
+        const y = date.getFullYear();
+        const m = date.getMonth()+1;
+        const d = date.getDate();
+        act_st_date = y
+            + "-" + ('00' + m).slice(-2)
+            + "-" + ('00' + d).slice(-2);
+        
+    } else if (act_date === 2) {
+        // 実終了日を今日の日付に設定
+        const date = new Date();
+        const y = date.getFullYear();
+        const m = date.getMonth()+1;
+        const d = date.getDate();
+        act_ed_date = y
+            + "-" + ('00' + m).slice(-2)
+            + "-" + ('00' + d).slice(-2);
+        
+    }
+    console.log("act_st_date = " + act_st_date)
+    console.log("act_ed_date = " + act_ed_date)
+
     const data = {
         "issue":{
             "status_id" : status,
             "description" : description,
-            "notes" : comment
+            "notes" : comment,
+            "actual_start_date" : act_st_date,
+            "actual_due_date" : act_ed_date
         }
     };
     const headers = {
