@@ -62,6 +62,22 @@ inputs:
     description: '各チェック処理でfail判定のときの挙動'
     required: false
     default: 'error'
+  act-st-date-if-opened-pr:
+    description: 'opened のときに「実開始日」の更新をするかどうか'
+    required: false
+    default: false
+  act-st-date-if-reopened-pr:
+    description: 'reopened のときに「実開始日」の更新をするかどうか'
+    required: false
+    default: false
+  act-end-date-if-mergeclosed-pr:
+    description: 'closed(merge) のときに「実終了日」の更新をするかどうか'
+    required: false
+    default: false
+  act-end-date-if-unmergeclosed-pr:
+    description: 'closed(unmerge) のときに「実終了日」の更新をするかどうか'
+    required: false
+    default: false
   
 runs:
   using: 'node16'
