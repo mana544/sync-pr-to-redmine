@@ -76,13 +76,13 @@ function main() {
         // プルリクイベント'closed'(unmerged)時のコメント
         const cmt_unmgclosed = core.getInput('comment-if-unmergeclosed-pr');
         // opened のときの実開始日更新: true/false(default)
-        const act_st_opened = true;
+        const act_st_opened = str2tf(core.getInput('act-st-date-if-opened-pr'));
         // reopened のときの実開始日更新: true/false(default)
-        const act_st_reopened = true;
+        const act_st_reopened = str2tf(core.getInput('act-st-date-if-reopened-pr'));
         // closed(merge) のときの実終了日更新: true/false(default)
-        const act_ed_mgclosed = true;
+        const act_ed_mgclosed = str2tf(core.getInput('act-end-date-if-mergeclosed-pr'));
         // closed(unmerge) のときの実終了日更新: true/false(default)
-        const act_ed_unmgclosed = true;
+        const act_ed_unmgclosed = str2tf(core.getInput('act-end-date-if-unmergeclosed-pr'));
 
         // ブランチ名からチケット番号抽出
         const issue_num = pick_issue_num(in_head_ref, regex_pattern);
@@ -516,6 +516,32 @@ function pick_issue_num(ref_name, pattern) {
         }
     }
 
+}
+
+function str2tf(str) {
+    /*
+    true or false の文字列をbooleanに変換します。
+    アルゴリズム的には、'true'以外の文字列だったらfalseを返します。
+
+    input
+    -----
+    str : string
+        'true' or 'false' の文字列。
+        大文字小文字は区別しません。
+
+    return
+    ------
+    tf : boolean
+        strから変換したboolean値。
+
+    */
+    const str2 = str.toLowerCase();
+
+    let tf = false;
+    if (str2 === 'true') {
+        tf = true;
+    }
+    return tf
 }
 
 
