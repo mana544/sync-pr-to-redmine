@@ -98,7 +98,7 @@ function main() {
             // Redmineチケット説明欄を取得
             // @INSERT_PR_URL@ があったら、プルリクURLに差し替える
             console.log("Redmineチケット #" + issue_num + "の説明欄を取得します...")
-            replaceRmDescription(rm_url, issue_num, pr_marker, pr_url)
+            replaceRmDescription(rm_url, rm_key, issue_num, pr_marker, pr_url)
             .then((description) => {
                 console.log("Redmineチケットの説明欄を取得しました")
 
@@ -336,13 +336,17 @@ function main() {
 }
 
 
-async function replaceRmDescription(rm_url, issue_num, substr, newsubstr) {
+async function replaceRmDescription(
+    rm_url, rm_key, issue_num, substr, newsubstr) {
     /* Redmineチケットの説明欄を取得し、文字列置換たあとの結果(説明欄本文)を返します
 
     input
     -----
     rm_url:string
         RedmineホストURL
+
+    rm_key:string
+        Redmine API Key
 
     issue_num:any
         チケット番号
@@ -363,9 +367,15 @@ async function replaceRmDescription(rm_url, issue_num, substr, newsubstr) {
     const url = new URL('issues/'+issue_num+'.json', rm_url);
     console.log("GET/ " + url.href)
 
+    const config = {
+        headers: {
+            'X-Redmine-API-Key': rm_key
+        }
+    };
+
     let res;
     // 404エラーの場合はエラー送出
-    res = await axios.get(url.href);
+    res = await axios.get(url.href, config);
 
     // 説明欄の中身を置換して返す
     const org_str = res.data.issue.description;
